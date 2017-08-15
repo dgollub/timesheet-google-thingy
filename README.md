@@ -5,7 +5,7 @@ A simple Python command line tool to interact with my timesheet (Google Spreadsh
 
 
 # Installation
-Create a `virtualenv env`, activate it via `. env/bin/active` and then run `pip install -r requirements.txt`, which will install all necessary tools. After that you can simply do a `./run.sh` to run the tool.
+Simply run `./run.sh` to use the tool.
 
 
 # Usage
