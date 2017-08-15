@@ -114,7 +114,9 @@ def get_timesheet_for_date(rows, date, user_full_name):
     def format_tasks(tasks):
         if not tasks:
             return ''
+
         result = 'Tasks:\n'
+
         for task in tasks:
             if '\n' in task:
                 sub_tasks = task.split('\n')
@@ -125,6 +127,8 @@ def get_timesheet_for_date(rows, date, user_full_name):
                     result += '\n'
                 else:
                     result += '\n* ' + task
+            else:
+                result += '\n* ' + task
 
         return result
 
