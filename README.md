@@ -26,11 +26,11 @@ Also, be aware, that on the first run, the tool will open your web-browser to au
 - minimize reads by caching last accessed data/row, and use that next time the tool is involved??? (problem: cache invalidation?!)
 
 
-LICENSE and COPYRIGHT
+# LICENSE and COPYRIGHT
 
 2017-08-15
 
-Copyright Daniel Kurashige-Gollub (daniel@kurashige-gollub.de)
+Copyright 2017 by Daniel Kurashige-Gollub (daniel@kurashige-gollub.de)
 
 
 [MIT-License](LICENSE.md)

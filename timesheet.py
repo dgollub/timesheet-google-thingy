@@ -58,9 +58,10 @@ def load_sheet_and_read_data(api, timesheet_url, commandline, user_full_name):
     # TODO(dkg): implement proper commandline handling for more than just this default
     timesheet = get_timesheet_for_date(rows, today, user_full_name)
     if timesheet:
+        print("\n\n")
         print("Timesheet for %s" % (today))
         print(timesheet)
-        print("\n\n")
+        print("\n")
     else:
         print("No entry found for %s" % today)
 
@@ -109,7 +110,6 @@ def get_timesheet_for_date(rows, date, user_full_name):
         task = found_row[idx].strip()
         if task:
             tasks.append(task)
-            print(task)
 
     def format_tasks(tasks):
         if not tasks:
@@ -189,5 +189,4 @@ def main():
     print("Done.")
 
 if __name__ == "__main__":
-    print(CURRENT_PATH)
     main()
