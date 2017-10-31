@@ -26,5 +26,4 @@ else
     . "${ENV_FOLDER}/bin/activate"
 fi
 
-python "${DIR}/timesheet.py"
-
+python "${DIR}/timesheet.py" "$1"

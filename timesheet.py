@@ -26,7 +26,7 @@ COL_TIME_FIXED = 6  # does not include lunch
 COL_MOVE = 7
 COL_NOTES = 8
 COL_TASKS_START = 9
-SPECIAL_VALUES = ["sick", "ab", "off", "wfh"]
+SPECIAL_VALUES = ["sick", "ab", "off", "wfh", "hol"]
 
 
 def get_client_secret_filenames():
@@ -46,7 +46,15 @@ def load_sheet_and_read_data(api, timesheet_url, commandline, user_full_name):
     now = arrow.now()
     today = now.format('YYYYMMDD')
 
-    print("Opening timesheet for %s (%s)..." % (today, commandline))
+
+    try:
+        other_date = arrow.get(commandline, 'YYYYMMDD').format('YYYYMMDD')
+    except arrow.parser.ParserError:
+        other_date = today
+
+    use_date = other_date
+
+    print("Opening timesheet for %s (%s)..." % (use_date, commandline))
 
     sheets = api.get(timesheet_url)
     sheet = sheets.sheets[0]
@@ -56,14 +64,14 @@ def load_sheet_and_read_data(api, timesheet_url, commandline, user_full_name):
     rows = sheet.values()
 
     # TODO(dkg): implement proper commandline handling for more than just this default
-    timesheet = get_timesheet_for_date(rows, today, user_full_name)
+    timesheet = get_timesheet_for_date(rows, use_date, user_full_name)
     if timesheet:
         print("\n\n")
-        print("Timesheet for %s" % (today))
+        print("Timesheet for %s" % (use_date))
         print(timesheet)
         print("\n")
     else:
-        print("No entry found for %s" % today)
+        print("No entry found for %s" % use_date)
 
 
 def get_timesheet_for_date(rows, date, user_full_name):
@@ -91,6 +99,9 @@ def get_timesheet_for_date(rows, date, user_full_name):
     if not end_val:
         if end_val in SPECIAL_VALUES:
             print("You forgot to add your end time.")
+        return None
+    if max_cols >= COL_NOTES:
+        print("No notes/tasks entered yet.")
         return None
 
     def parse_hours(val):
@@ -144,11 +155,12 @@ def get_timesheet_for_date(rows, date, user_full_name):
         return result
 
     msg = """
-SUBJECT: [Daily Report] %(date)s
-BODY:
+[Daily Report] %(date)s
+
 Hi,
 
 Daily Report for Date: %(date)s
+
 Start Time: %(start)s
 End Time: %(end)s
 
@@ -187,8 +199,9 @@ def main():
     sheets = Sheets.from_files(secrets_file, cache_file)
     print("Success.")
 
-    commandline = "read today"
-    load_sheet_and_read_data(sheets, timesheet_url, commandline, user_full_name)
+    arg = "read today" if len(sys.argv) < 2 else sys.argv[1].strip()
+    date_to_use = "read today" if arg == '' else arg
+    load_sheet_and_read_data(sheets, timesheet_url, date_to_use, user_full_name)
 
     print("Done.")
 
