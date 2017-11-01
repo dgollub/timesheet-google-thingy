@@ -100,9 +100,9 @@ def get_timesheet_for_date(rows, date, user_full_name):
         if end_val in SPECIAL_VALUES:
             print("You forgot to add your end time.")
         return None
-    if max_cols >= COL_NOTES:
-        print("No notes/tasks entered yet.")
-        return None
+    #if max_cols >= COL_NOTES:
+    #    print("No notes/tasks entered yet.")
+    #    return None
 
     def parse_hours(val):
         try:
