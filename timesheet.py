@@ -42,19 +42,9 @@ def get_client_secret_filenames():
     return filename, cachefile
 
 
-def load_sheet_and_read_data(api, timesheet_url, commandline, user_full_name):
-    now = arrow.now()
-    today = now.format('YYYYMMDD')
+def load_first_sheet_rows(api, timesheet_url, date=arrow.now().format('YYYYMMDD')):
 
-
-    try:
-        other_date = arrow.get(commandline, 'YYYYMMDD').format('YYYYMMDD')
-    except arrow.parser.ParserError:
-        other_date = today
-
-    use_date = other_date
-
-    print("Opening timesheet for %s (%s)..." % (use_date, commandline))
+    print("Opening timesheet for %s ..." % (date))
 
     sheets = api.get(timesheet_url)
     sheet = sheets.sheets[0]
@@ -63,7 +53,22 @@ def load_sheet_and_read_data(api, timesheet_url, commandline, user_full_name):
 
     rows = sheet.values()
 
-    # TODO(dkg): implement proper commandline handling for more than just this default
+    return rows
+
+
+def load_sheet_and_read_data(api, timesheet_url, commandline, user_full_name):
+    now = arrow.now()
+    today = now.format('YYYYMMDD')
+
+    try:
+        other_date = arrow.get(commandline, 'YYYYMMDD').format('YYYYMMDD')
+    except arrow.parser.ParserError:
+        other_date = today
+
+    use_date = other_date
+
+    rows = load_first_sheet_rows(api, timesheet_url, use_date)
+
     timesheet = get_timesheet_for_date(rows, use_date, user_full_name)
     if timesheet:
         print("\n\n")
@@ -183,6 +188,72 @@ Kind regards,
     return msg
 
 
+def calc_stats(api, timesheet_url, arg_date=None):
+    try:
+        date = arrow.get(arg_date, 'YYYYMM')
+    except Exception:  # pylint: disable=W0703
+        now = arrow.now()
+        date = now.format('YYYYMM')
+
+    rows = load_first_sheet_rows(api, timesheet_url, date)
+    # find the rows for the given month
+    filtered = [row for row in rows if row and str(row[COL_DATE]).startswith(date)]
+
+    if filtered is None or not filtered:
+        return None
+    print("")
+    print("Found (%d) entries for date %s!" % (len(filtered), date))
+
+    dates, hours = [], []
+    first = None
+    last = None
+    for row in filtered:
+        time = row[COL_TIME_FIXED]
+        max_cols = len(row)
+        if max_cols <= COL_TASKS_START:
+            continue
+        tasks = []
+        for idx in range(COL_TASKS_START, max_cols):
+            task = row[idx].strip()
+            if task:
+                tasks.append(task)
+        if not tasks:
+            continue
+        hours.append(time)
+        dates.append(row[COL_DATE])
+        if first is None:
+            first = row
+        else:
+            last = row
+
+    total_hours, total_minutes, total_time = 0, 0, ""
+    for hour in hours:
+        parts = hour.split(":")
+        try:
+            local_hours = int(parts[0])
+            local_minutes = int(parts[1])
+            total_hours += local_hours
+            total_minutes += local_minutes
+        except:
+            pass
+        if total_minutes >= 60:
+            total_hours += (total_minutes / 60)
+            total_minutes = total_minutes % 60
+        total_time = "%d:%d hours:minutes" % (total_hours, total_minutes)
+
+    print("*" * 50)
+    print("")
+    print("Valid hours entries:", len(hours))
+    for index, worked_date in enumerate(dates):
+        print("  %s: %s" % (worked_date, hours[index]))
+    print("")
+    print("First:", "<first> not found" if first is None else first[COL_DATE])
+    print("Last:", "<last> not found" if last is None else last[COL_DATE])
+    print("")
+    print("Total time in %s: %s" % (date, total_time))
+    print("")
+    print("*" * 50)
+
 def main():
     # print("Checking environment variable TIMESHEET_URL for spreadsheet URL...")
     timesheet_url = os.environ.get('TIMESHEET_URL', "").strip()
@@ -200,8 +271,12 @@ def main():
     print("Success.")
 
     arg = "read today" if len(sys.argv) < 2 else sys.argv[1].strip()
-    date_to_use = "read today" if arg == '' else arg
-    load_sheet_and_read_data(sheets, timesheet_url, date_to_use, user_full_name)
+    if arg == "stats":
+        date = None if len(sys.argv) < 3 else sys.argv[2].strip()
+        calc_stats(sheets, timesheet_url, date)
+    else:
+        date_to_use = "read today" if arg == '' else arg
+        load_sheet_and_read_data(sheets, timesheet_url, date_to_use, user_full_name)
 
     print("Done.")
 
