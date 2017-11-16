@@ -226,26 +226,41 @@ def calc_stats(api, timesheet_url, arg_date=None):
         else:
             last = row
 
-    total_hours, total_minutes, total_time = 0, 0, ""
-    for hour in hours:
-        parts = hour.split(":")
+
+    def calc(hour):
+        parts = str(hour).split(":")
         try:
             local_hours = int(parts[0])
             local_minutes = int(parts[1])
-            total_hours += local_hours
-            total_minutes += local_minutes
+            return local_hours, local_minutes
         except:
             pass
+            return 0, 0
+
+    total_hours, total_minutes, total_time = 0, 0, ""
+    for hour in hours:
+        local_hours, local_minutes = calc(hour)
+        total_hours += local_hours
+        total_minutes += local_minutes
         if total_minutes >= 60:
             total_hours += (total_minutes / 60)
             total_minutes = total_minutes % 60
         total_time = "%d:%d hours:minutes" % (total_hours, total_minutes)
 
+    expected = 0
+    actual_h, actual_m = 0, 0
+
     print("*" * 50)
     print("")
-    print("Valid hours entries:", len(hours))
+    print("Valid hours entries: %s\t[required vs actual]" % len(hours))
     for index, worked_date in enumerate(dates):
-        print("  %s: %s" % (worked_date, hours[index]))
+        expected = (index + 1) * 8
+        local_h, local_m = calc(hours[index])
+        actual_m += local_m
+        actual_h += local_h + (actual_m / 60)
+        actual_m = actual_m % 60
+        print("  %s: %s\t[%s:00 vs %s:%s]" % (worked_date, hours[index], str(expected).zfill(2),
+                                              str(actual_h).zfill(2), str(actual_m).zfill(2)))
     print("")
     print("First:", "<first> not found" if first is None else first[COL_DATE])
     print("Last:", "<last> not found" if last is None else last[COL_DATE])
