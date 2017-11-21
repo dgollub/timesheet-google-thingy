@@ -196,8 +196,9 @@ def calc_stats(api, timesheet_url, arg_date=None):
         date = now.format('YYYYMM')
 
     rows = load_first_sheet_rows(api, timesheet_url, date)
+    date_str = str(date.format('YYYYMM'))
     # find the rows for the given month
-    filtered = [row for row in rows if row and str(row[COL_DATE]).startswith(date)]
+    filtered = [row for row in rows if row and str(row[COL_DATE]).startswith(date_str)]
 
     if filtered is None or not filtered:
         return None
