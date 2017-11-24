@@ -211,17 +211,26 @@ def calc_stats(api, timesheet_url, arg_date=None):
     for row in filtered:
         time = row[COL_TIME_FIXED]
         max_cols = len(row)
-        if max_cols <= COL_TASKS_START:
-            continue
         tasks = []
         for idx in range(COL_TASKS_START, max_cols):
             task = row[idx].strip()
             if task:
                 tasks.append(task)
-        if not tasks:
+
+        day_type = row[COL_TIME_START]
+        date = row[COL_DATE]
+
+        if day_type in SPECIAL_VALUES:
+            time = day_type
+            hours.append(time)
+            dates.append(date)
             continue
+        elif not tasks:
+            continue
+
         hours.append(time)
-        dates.append(row[COL_DATE])
+        dates.append(date)
+
         if first is None:
             first = row
         else:
@@ -235,7 +244,6 @@ def calc_stats(api, timesheet_url, arg_date=None):
             local_minutes = int(parts[1])
             return local_hours, local_minutes
         except:
-            pass
             return 0, 0
 
     total_hours, total_minutes, total_time = 0, 0, ""
@@ -255,13 +263,16 @@ def calc_stats(api, timesheet_url, arg_date=None):
     print("")
     print("Valid hours entries: %s\t[required vs actual]" % len(hours))
     for index, worked_date in enumerate(dates):
-        expected = (index + 1) * 8
-        local_h, local_m = calc(hours[index])
-        actual_m += local_m
-        actual_h += local_h + (actual_m / 60)
-        actual_m = actual_m % 60
-        print("  %s: %s\t[%s:00 vs %s:%s]" % (worked_date, hours[index], str(expected).zfill(2),
-                                              str(actual_h).zfill(2), str(actual_m).zfill(2)))
+        if hours[index] in SPECIAL_VALUES:
+            print("  %s: Off, because %s" % (worked_date, hours[index]))
+        else:
+            expected = str((index + 1) * 8).zfill(2)
+            local_h, local_m = calc(hours[index])
+            actual_m += local_m
+            actual_h += local_h + (actual_m / 60)
+            actual_m = actual_m % 60
+            print("  %s: %s\t[%s:00 vs %s:%s]" % (worked_date, hours[index], expected,
+                                                  str(actual_h).zfill(2), str(actual_m).zfill(2)))
     print("")
     print("First:", "<first> not found" if first is None else first[COL_DATE])
     print("Last:", "<last> not found" if last is None else last[COL_DATE])
