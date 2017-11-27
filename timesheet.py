@@ -262,11 +262,13 @@ def calc_stats(api, timesheet_url, arg_date=None):
     print("*" * 50)
     print("")
     print("Valid hours entries: %s\t[required vs actual]" % len(hours))
+    special = 0
     for index, worked_date in enumerate(dates):
         if hours[index] in SPECIAL_VALUES:
             print("  %s: Off, because %s" % (worked_date, hours[index]))
+            special = special + 1
         else:
-            expected = str((index + 1) * 8).zfill(2)
+            expected = str((index + 1 - special) * 8).zfill(2)
             local_h, local_m = calc(hours[index])
             actual_m += local_m
             actual_h += local_h + (actual_m / 60)
@@ -280,6 +282,7 @@ def calc_stats(api, timesheet_url, arg_date=None):
     print("Total time in %s: %s" % (date, total_time))
     print("")
     print("*" * 50)
+
 
 def main():
     # print("Checking environment variable TIMESHEET_URL for spreadsheet URL...")
