@@ -209,16 +209,19 @@ def calc_stats(api, timesheet_url, arg_date=None):
     first = None
     last = None
     for row in filtered:
-        time = row[COL_TIME_FIXED]
-        max_cols = len(row)
+        max_cols = len(row)        
+        time = row[COL_TIME_FIXED] if max_cols >= COL_TIME_FIXED else None
         tasks = []
         for idx in range(COL_TASKS_START, max_cols):
             task = row[idx].strip()
             if task:
                 tasks.append(task)
 
-        day_type = row[COL_TIME_START]
-        date = row[COL_DATE]
+        day_type = row[COL_TIME_START] if max_cols >= COL_TIME_START else None
+        date = row[COL_DATE] if max_cols >= COL_DATE else None
+
+        if day_type is None:
+            continue
 
         if day_type in SPECIAL_VALUES:
             time = day_type
@@ -309,6 +312,7 @@ def main():
         load_sheet_and_read_data(sheets, timesheet_url, date_to_use, user_full_name)
 
     print("Done.")
+
 
 if __name__ == "__main__":
     main()
