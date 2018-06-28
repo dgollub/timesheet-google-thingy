@@ -139,7 +139,7 @@ def get_timesheet_for_date(rows, date, user_full_name):
                 if len(sub_tasks) > 1:
                     result += '\n* ' + sub_tasks[0]  # main task
                     for sub_task in sub_tasks[1:]:  # actual sub tasks
-                        result += '\n\t- ' + sub_task
+                        result += '\n\t' + sub_task
                     result += '\n'
                 else:
                     result += '\n* ' + task
