@@ -166,8 +166,6 @@ Hi,
 
 Daily Report for Date: %(date)s
 
-Start Time: %(start)s
-End Time: %(end)s
 
 %(tasks)s
 
