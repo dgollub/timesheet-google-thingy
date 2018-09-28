@@ -195,7 +195,7 @@ def get_timesheet_for_date(rows, date, user_full_name):
     msg = """
 [Daily Report] %(date)s
 
-WFH Information: %(wfh_info)s
+WFH: %(wfh_info)s
 
 
 Hi,
