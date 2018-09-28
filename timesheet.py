@@ -24,8 +24,9 @@ COL_LUNCH = 4
 COL_TIME = 5  # includes lunch
 COL_TIME_FIXED = 6  # does not include lunch
 COL_MOVE = 7
-COL_NOTES = 8
-COL_TASKS_START = 9
+COL_WORK_FROM_HOME = 8
+COL_NOTES = 9
+COL_TASKS_START = 10
 SPECIAL_VALUES = ["sick", "ab", "off", "wfh", "hol"]
 
 
@@ -82,15 +83,16 @@ def load_sheet_and_read_data(api, timesheet_url, commandline, user_full_name):
 def get_timesheet_for_date(rows, date, user_full_name):
 
     # find the row with the first column that has today's date in it
-    rows = [row for row in rows if row and str(row[COL_DATE]) == date]
+    result_rows = [row for row in rows if row and str(row[COL_DATE]) == date]
 
-    if rows is None or not rows:
+    if result_rows is None or not result_rows:
         return None
-    if len(rows) != 1:
-        print("More than one entry (%d) found for date %s! Please fix your sheet!" % (len(rows), date))
+    if len(result_rows) != 1:
+        print("More than one entry (%d) found for date %s! Please fix your sheet!" % (len(result_rows), date))
         return None
 
-    found_row = rows[0]
+    found_row = result_rows[0]
+    found_index = rows.index(found_row)
 
     start_val = found_row[COL_TIME_START]
     end_val = found_row[COL_TIME_END]
@@ -120,6 +122,37 @@ def get_timesheet_for_date(rows, date, user_full_name):
     duration = str(duration_val)
     notes_str = found_row[COL_NOTES]
     notes = notes_str.split('\n')
+
+
+    # check the previous Friday entry (if today is not Friday), to see what work from home
+    # days were were selected
+    weekday = (found_row[COL_WEEKDAY] or "").lower()
+    check_start_index = found_index if weekday.startswith("fr") else found_index - 7
+    check_row = found_row
+
+    while (check_start_index < found_index):
+        check_row = rows[check_start_index]
+        if (check_row[COL_WEEKDAY] or "").lower().startswith("fr"):
+            break
+        check_start_index += 1
+
+    is_same_day = None
+    if check_start_index != found_index:
+    #     print("HA! GOT PREVS FRIDAY.")
+        is_same_day = False
+    else:
+    #     print("SAME DAY")
+        is_same_day = True
+    
+    wfh = check_row[COL_WORK_FROM_HOME]
+    wfh = wfh.replace("Mon", "Monday")
+    wfh = wfh.replace("Tue", "Tuesday")
+    wfh = wfh.replace("Wed", "Wednesday")
+    wfh = wfh.replace("Thu", "Thursday")
+    wfh = wfh.replace("Fri", "Friday")
+    wfh = wfh.replace(", ", ",").replace(",", " and ")
+    wfh_extra = "Next week" if is_same_day else "This week"
+    wfh_info = """%s %s""" % (wfh_extra, wfh)
 
     tasks = []
     for idx in range(COL_TASKS_START, max_cols):
@@ -162,6 +195,9 @@ def get_timesheet_for_date(rows, date, user_full_name):
     msg = """
 [Daily Report] %(date)s
 
+WFH Information: %(wfh_info)s
+
+
 Hi,
 
 Daily Report for Date: %(date)s
@@ -179,6 +215,7 @@ Kind regards,
     "start": start,
     "end": end,
     "duration": duration,
+    "wfh_info": wfh_info,
     "tasks": format_tasks(tasks) if tasks else "",
     "notes": format_notes(notes) if notes else "",
 }
