@@ -144,7 +144,9 @@ def get_timesheet_for_date(rows, date, user_full_name):
     #     print("SAME DAY")
         is_same_day = True
     
-    wfh = check_row[COL_WORK_FROM_HOME]
+    wfh = u"" if len(check_row)-1 < COL_WORK_FROM_HOME else check_row[COL_WORK_FROM_HOME] 
+    if wfh == "":
+        raise Exception("No WFH information entered")
     wfh = wfh.replace("Mon", "Monday")
     wfh = wfh.replace("Tue", "Tuesday")
     wfh = wfh.replace("Wed", "Wednesday")
@@ -152,7 +154,7 @@ def get_timesheet_for_date(rows, date, user_full_name):
     wfh = wfh.replace("Fri", "Friday")
     wfh = wfh.replace(", ", ",").replace(",", " and ")
     wfh_extra = "Next week" if is_same_day else "This week"
-    wfh_info = """%s %s""" % (wfh_extra, wfh)
+    wfh_info = """%s %s""" % (wfh_extra, wfh) if wfh != "" else "No WFH info entered."
 
     tasks = []
     for idx in range(COL_TASKS_START, max_cols):
