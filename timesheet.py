@@ -132,7 +132,7 @@ def get_timesheet_for_date(rows, date, user_full_name):
 
     while (check_start_index < found_index):
         check_row = rows[check_start_index]
-        if (check_row[COL_WEEKDAY] or "").lower().startswith("fr"):
+        if (len(check_row) > COL_WEEKDAY and check_row[COL_WEEKDAY] or "").lower().startswith("fr"):
             break
         check_start_index += 1
 
