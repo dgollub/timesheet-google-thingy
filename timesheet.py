@@ -145,8 +145,6 @@ def get_timesheet_for_date(rows, date, user_full_name):
         is_same_day = True
     
     wfh = u"" if len(check_row)-1 < COL_WORK_FROM_HOME else check_row[COL_WORK_FROM_HOME] 
-    if wfh == "":
-        raise Exception("No WFH information entered")
     wfh = wfh.replace("Mon", "Monday")
     wfh = wfh.replace("Tue", "Tuesday")
     wfh = wfh.replace("Wed", "Wednesday")
