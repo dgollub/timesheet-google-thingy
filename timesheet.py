@@ -30,6 +30,16 @@ COL_TASKS_START = 10
 SPECIAL_VALUES = ["sick", "ab", "off", "wfh", "hol"]
 
 
+def calc(hour):
+    parts = str(hour).split(":")
+    try:
+        local_hours = int(parts[0])
+        local_minutes = int(parts[1])
+        return local_hours, local_minutes
+    except:
+        return 0, 0
+
+
 def get_client_secret_filenames():
     filename = os.path.join(CURRENT_PATH, "client-secrets.json")
     cachefile = os.path.join(CURRENT_PATH, "client-secrets-cache.json")
@@ -223,7 +233,7 @@ Kind regards,
     return msg
 
 
-def calc_stats(api, timesheet_url, arg_date=None):
+def _load_sheet_data(api, timesheet_url, arg_date=None):
     try:
         date = arrow.get(arg_date, 'YYYYMM')
     except Exception:  # pylint: disable=W0703
@@ -232,8 +242,64 @@ def calc_stats(api, timesheet_url, arg_date=None):
 
     rows = load_first_sheet_rows(api, timesheet_url, date)
     date_str = str(date.format('YYYYMM'))
+
+    return (rows, date_str)
+    
+
+def calc_daily_hours_for_month(api, timesheet_url, arg_date):
+    rows, date = _load_sheet_data(api, timesheet_url, arg_date)
+    filtered = [row for row in rows if row and str(row[COL_DATE]).startswith(date)]
+
+    if filtered is None or not filtered:
+        return None
+    print("")
+    print("Found (%d) entries for date %s!" % (len(filtered), date))
+
+    minutes = 0
+    days = 0
+    for row in filtered:
+        max_cols = len(row)        
+        time = row[COL_TIME_FIXED] if max_cols >= COL_TIME_FIXED else None
+        time_start = row[COL_TIME_START] if max_cols >= COL_TIME_START else None
+        time_end = row[COL_TIME_END] if max_cols >= COL_TIME_END else None
+        date = row[COL_DATE] if max_cols >= COL_DATE else None
+
+        if time_start is None or time_end is None or date is None:
+            continue
+        start_hours, start_minutes = calc(time_start)
+        end_hours, end_minutes = calc(time_end)
+
+        if start_hours == 0:
+            print("Day off because of %s" % time_start)
+            continue
+
+        minutes_day = abs(end_hours - start_hours) * 60
+        minutes_day += end_minutes - start_minutes
+        minutes += minutes_day
+
+        hours_day = minutes_day / 60
+        hours_day_without_lunch = hours_day - 1
+        minutes_day = minutes_day % 60
+        total_time_for_date = str(hours_day).zfill(2) + ':' + str(minutes_day).zfill(2)
+
+        days += 1
+
+        no_lunch = str(hours_day_without_lunch).zfill(2) + ':' + str(minutes_day).zfill(2)
+        print("%s: %s to %s = %s (without lunch: %s)" % (date, str(time_start).zfill(2), str(time_end).zfill(2), total_time_for_date, no_lunch))
+
+    hours = str(minutes / 60).zfill(2)
+    minutes = str(minutes % 60).zfill(2)
+    lunch_hours = str(int(hours) - days).zfill(2)
+    print("")
+    print("Total days worked: %s" % str(days))
+    print("Total hours: %s:%s (with 1 hour lunch: %s:%s)" % (hours, minutes, lunch_hours, minutes))
+    print("")
+    
+
+def calc_stats(api, timesheet_url, arg_date=None):
+    rows, date = _load_sheet_data(api, timesheet_url, arg_date)
     # find the rows for the given month
-    filtered = [row for row in rows if row and str(row[COL_DATE]).startswith(date_str)]
+    filtered = [row for row in rows if row and str(row[COL_DATE]).startswith(date)]
 
     if filtered is None or not filtered:
         return None
@@ -273,16 +339,6 @@ def calc_stats(api, timesheet_url, arg_date=None):
             first = row
         else:
             last = row
-
-
-    def calc(hour):
-        parts = str(hour).split(":")
-        try:
-            local_hours = int(parts[0])
-            local_minutes = int(parts[1])
-            return local_hours, local_minutes
-        except:
-            return 0, 0
 
     total_hours, total_minutes, total_time = 0, 0, ""
     for hour in hours:
@@ -338,10 +394,13 @@ def main():
     sheets = Sheets.from_files(secrets_file, cache_file)
     print("Success.")
 
+    date = None if len(sys.argv) < 3 else sys.argv[2].strip()
     arg = "read today" if len(sys.argv) < 2 else sys.argv[1].strip()
+
     if arg == "stats":
-        date = None if len(sys.argv) < 3 else sys.argv[2].strip()
-        calc_stats(sheets, timesheet_url, date)
+        calc_stats(sheets, timesheet_url, date or arrow.now().format('YYYYMM'))
+    elif arg == "daily":
+        calc_daily_hours_for_month(sheets, timesheet_url, date or arrow.now().format('YYYYMM'))
     else:
         date_to_use = "read today" if arg == '' else arg
         load_sheet_and_read_data(sheets, timesheet_url, date_to_use, user_full_name)
