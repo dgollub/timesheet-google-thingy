@@ -162,7 +162,7 @@ def get_timesheet_for_date(rows, date, user_full_name):
     wfh = wfh.replace("Fri", "Friday")
     wfh = wfh.replace(", ", ",").replace(",", " and ")
     wfh_extra = "Next week" if is_same_day else "This week"
-    wfh_info = """%s %s""" % (wfh_extra, wfh) if wfh != "" else "No WFH info entered."
+    wfh_info = """%s %s""" % (wfh_extra, wfh) if wfh != "" else "all days"
 
     tasks = []
     for idx in range(COL_TASKS_START, max_cols):
