@@ -366,7 +366,7 @@ def calc_stats(api, timesheet_url, arg_date=None):
     print("*" * 50)
     print("")
     print("Valid hours entries: %s\t[required vs actual]" % len(hours))
-    print(hours)
+
     special = 0
     deduct_work_hours = 0
     for index, worked_date in enumerate(dates):
@@ -382,8 +382,9 @@ def calc_stats(api, timesheet_url, arg_date=None):
             actual_m += local_m
             actual_h += local_h + (actual_m / 60)
             actual_m = actual_m % 60
-            print("  %s: %s\t[%s:00 vs %s:%s]" % (worked_date, hours[index], expected,
-                                                  str(actual_h).zfill(2), str(actual_m).zfill(2)))
+            print("  %s: %s\t[%s:00 vs %s:%s] %s" % (worked_date, hours[index], expected,
+                                                  str(actual_h).zfill(2), str(actual_m).zfill(2),
+                                                  "Half day" if half_day else ""))
     print("")
     print("First:", "<first> not found" if first is None else first[COL_DATE])
     print("Last:", "<last> not found" if last is None else last[COL_DATE])
