@@ -30,11 +30,14 @@ COL_TASKS_START = 10
 SPECIAL_VALUES = ["sick", "ab", "off", "wfh", "hol"]
 
 
-def calc(hour):
+def calc(hour, half_it=False):
     parts = str(hour).split(":")
     try:
         local_hours = int(parts[0])
         local_minutes = int(parts[1])
+        if half_it:
+            local_hours = local_hours / 2
+            local_minutes = local_minutes / 2
         return local_hours, local_minutes
     except:
         return 0, 0
@@ -307,6 +310,7 @@ def calc_stats(api, timesheet_url, arg_date=None):
     print("Found (%d) entries for date %s!" % (len(filtered), date))
 
     dates, hours = [], []
+    half_days = {}
     first = None
     last = None
     for row in filtered:
@@ -332,6 +336,11 @@ def calc_stats(api, timesheet_url, arg_date=None):
         elif not tasks:
             continue
 
+        # If it was a half day, meaning I took half a day off, then only count half the time
+        half_day = 'half' in row[COL_WORK_FROM_HOME]
+        if half_day:
+            half_days[date] = time
+
         hours.append(time)
         dates.append(date)
 
@@ -341,8 +350,9 @@ def calc_stats(api, timesheet_url, arg_date=None):
             last = row
 
     total_hours, total_minutes, total_time = 0, 0, ""
-    for hour in hours:
-        local_hours, local_minutes = calc(hour)
+    for index, hour in enumerate(hours):
+        date = dates[index]
+        local_hours, local_minutes = calc(hour, date in half_days)
         total_hours += local_hours
         total_minutes += local_minutes
         if total_minutes >= 60:
@@ -356,14 +366,19 @@ def calc_stats(api, timesheet_url, arg_date=None):
     print("*" * 50)
     print("")
     print("Valid hours entries: %s\t[required vs actual]" % len(hours))
+    print(hours)
     special = 0
+    deduct_work_hours = 0
     for index, worked_date in enumerate(dates):
         if hours[index] in SPECIAL_VALUES:
             print("  %s: Off, because %s" % (worked_date, hours[index]))
             special = special + 1
         else:
-            expected = str((index + 1 - special) * 8).zfill(2)
-            local_h, local_m = calc(hours[index])
+            half_day = worked_date in half_days
+            # each workday has 8 hours of work, but on half days it is only half of 8, aka 4.
+            deduct_work_hours += 0 if not half_day else 4
+            expected = str(((index + 1 - special) * 8) - deduct_work_hours).zfill(2)
+            local_h, local_m = calc(hours[index], half_day)
             actual_m += local_m
             actual_h += local_h + (actual_m / 60)
             actual_m = actual_m % 60
