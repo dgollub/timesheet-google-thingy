@@ -211,7 +211,7 @@ def get_timesheet_for_date(rows, date, user_full_name):
 [Daily Report] %(date)s
 
 WFH: %(wfh_info)s
-Time: %(start)s - %(end)s
+Time: %(start)s - %(end)s (%(duration)s hours total)
 
 Hi,
 
