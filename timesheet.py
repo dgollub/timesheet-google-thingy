@@ -3,7 +3,9 @@
 #
 from __future__ import print_function
 
+import csv
 import os
+import re
 import sys
 
 import arrow
@@ -15,6 +17,7 @@ sys.setdefaultencoding('utf-8')
 
 
 CURRENT_PATH = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
+DEBUG = os.environ.get('DEBUG', "0") == "1"
 
 COL_DATE = 0
 COL_WEEKDAY = 1
@@ -30,18 +33,18 @@ COL_TASKS_START = 10
 SPECIAL_VALUES = ["sick", "ab", "off", "wfh", "hol"]
 
 
-def calc(hour, half_it=False):
-    parts = str(hour).split(":")
+def calc(hour, half_it=False, split_char = ":"):
+    parts = str(hour).split(split_char)
     try:
-        local_hours = int(parts[0])
+        local_hours = int(parts[0])        
         local_minutes = int(parts[1])
         if half_it:
             local_hours = local_hours / 2
             local_minutes = local_minutes / 2
         return local_hours, local_minutes
     except:
-        return 0, 0
-
+        if len(parts) == 1:
+            return int(parts[0]), 0
 
 def get_client_secret_filenames():
     filename = os.path.join(CURRENT_PATH, "client-secrets.json")
@@ -251,6 +254,78 @@ def _load_sheet_data(api, timesheet_url, arg_date=None):
     return (rows, date_str)
     
 
+def export_csv(api, timesheet_url, arg_date):
+    rows, date = _load_sheet_data(api, timesheet_url, arg_date)
+    filtered = [row for row in rows if row and str(row[COL_DATE]).startswith(date)]
+
+    if filtered is None or not filtered:
+        return None
+    
+    csv_filename = os.path.join(os.getcwd(), "%s.csv" % (arg_date))
+
+    print("")
+    print("Found (%d) entries for date %s!" % (len(filtered), date))
+    print("Writing to %s" % (csv_filename))
+
+    with open(csv_filename, mode='w') as f:
+        f = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        # f.writerow(['John Smith', 'Accounting', 'November'])
+        f.writerow(["username", "date", "task", "duration", "work_type", "details"])
+
+        def w(task, duration_minutes, details = ""):
+            work_type = "meeting" if "meeting" in details.lower() else "development" 
+            # Needed CSV columns
+            # username|date|task|duration|work_type|details
+            f.writerow(["daniel", date, task, "%dm" % (duration_minutes), work_type, details])
+
+        # regex: ([a-zA-Z].+-\d+)(.*)((?<=\[).+(?=\]))
+        # text:  SCAN-4167 As a developer, I want to update AIScanRobo every week [1h]
+        # 3 groups:
+        #  SCAN-4167
+        #  As a developer, I want to update AIScanRobo every week [
+        #  1h
+        r = re.compile(r"([a-zA-Z].+-\d+)(.*)((?<=\[).+(?=\]))")
+        for row in filtered:
+            max_cols = len(row)        
+            time = row[COL_TIME_FIXED] if max_cols >= COL_TIME_FIXED else None
+            time_start = row[COL_TIME_START] if max_cols >= COL_TIME_START else None
+            time_end = row[COL_TIME_END] if max_cols >= COL_TIME_END else None
+            date = row[COL_DATE] if max_cols >= COL_DATE else None
+
+            if time_start is None or time_end is None or date is None:
+                continue
+
+            tasks = []
+            for idx in range(COL_TASKS_START, max_cols):
+                task = row[idx].strip()
+                if task:
+                    tasks.append(task)
+            
+            if len(tasks) == 0:
+                print("%s: no tasks found! %s" % (date, time_start))
+                continue
+
+            print("%s: %d tasks found!" % (date, len(tasks)))
+
+            for task in tasks:
+                t = task.split('\n')[0] if '\n' in task else task
+                g = r.match(t).groups()
+                if DEBUG:
+                    print("task:   %s" % (t))
+                    print("groups: %s" % len(g))
+                
+                [task_number, task_details, duration] = g
+                hours, half_hours = calc(duration.replace("h", ""), split_char=".")
+                minutes = (hours * 60) + (6 * half_hours)
+                if DEBUG:
+                    print("time:   %s, %s $ %s $ %s" % (hours, half_hours, duration, minutes))
+                details = "%s %s" % (task_number, task_details[:-1].strip())
+                w(task_number, minutes, details.strip())
+
+    print("")
+    print("CSV output to: %s" % (csv_filename))
+
+
 def calc_daily_hours_for_month(api, timesheet_url, arg_date):
     rows, date = _load_sheet_data(api, timesheet_url, arg_date)
     filtered = [row for row in rows if row and str(row[COL_DATE]).startswith(date)]
@@ -299,7 +374,7 @@ def calc_daily_hours_for_month(api, timesheet_url, arg_date):
     print("Total days worked: %s" % str(days))
     print("Total hours: %s:%s (with 1 hour lunch: %s:%s)" % (hours, minutes, lunch_hours, minutes))
     print("")
-    
+
 
 def calc_stats(api, timesheet_url, arg_date=None):
     rows, date = _load_sheet_data(api, timesheet_url, arg_date)
@@ -407,6 +482,19 @@ def main():
         print("Warning: USER_FULL_NAME environment variable not set!")
         user_full_name = "Herman Toothrot"
 
+    print("")
+    print("Usage:   python timesheet.py [command|date] [date]")
+    print("Example: python timesheet.py stats 202011")
+    print("Example: python timesheet.py 20201130")
+    print("")
+    print("Available commands:")
+    print("- stats: show summed up hours and minutes for the given/current month")
+    print("- daily: same as stats, except ready to email to HR")
+    print("- csv: task breakdown for the month and time spend on each task")
+    print("")
+    print("""Tip: use "DEBUG=1 timesheet <parameter>" to enable debug output""")
+    print("")
+    
     print("Trying to load client-secrets.json file ...")
     secrets_file, cache_file = get_client_secret_filenames()
     sheets = Sheets.from_files(secrets_file, cache_file)
@@ -419,6 +507,8 @@ def main():
         calc_stats(sheets, timesheet_url, date or arrow.now().format('YYYYMM'))
     elif arg == "daily":
         calc_daily_hours_for_month(sheets, timesheet_url, date or arrow.now().format('YYYYMM'))
+    elif arg == "csv":
+        export_csv(sheets, timesheet_url, date or arrow.now().format('YYYYMM'))
     else:
         date_to_use = "read today" if arg == '' else arg
         load_sheet_and_read_data(sheets, timesheet_url, date_to_use, user_full_name)
