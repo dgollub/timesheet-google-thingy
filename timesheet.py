@@ -44,7 +44,10 @@ def calc(hour, half_it=False, split_char = ":"):
         return local_hours, local_minutes
     except:
         if len(parts) == 1:
-            return int(parts[0]), 0
+            try:
+                return int(parts[0]), 0
+            except:
+                return 0, 0
 
 def get_client_secret_filenames():
     filename = os.path.join(CURRENT_PATH, "client-secrets.json")
@@ -273,10 +276,10 @@ def export_csv(api, timesheet_url, arg_date):
         f.writerow(["username", "date", "task", "duration", "work_type", "details"])
 
         def w(task, duration_minutes, details = ""):
-            work_type = "meeting" if "meeting" in details.lower() else "development" 
+            work_type = "Meeting" if "meeting" in details.lower() else "Development" 
             # Needed CSV columns
             # username|date|task|duration|work_type|details
-            f.writerow(["daniel", date, task, "%dm" % (duration_minutes), work_type, details])
+            f.writerow(["daniel", arrow.get(str(date), 'YYYYMMDD').format('YYYY.MM.DD'), task, "%dm" % (duration_minutes), work_type, details])
 
         # regex: ([a-zA-Z].+-\d+)(.*)((?<=\[).+(?=\]))
         # text:  SCAN-4167 As a developer, I want to update AIScanRobo every week [1h]
