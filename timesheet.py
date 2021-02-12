@@ -12,9 +12,6 @@ import arrow
 
 from gsheets import Sheets
 
-reload(sys)
-sys.setdefaultencoding('utf-8')
-
 
 CURRENT_PATH = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 DEBUG = os.environ.get('DEBUG', "0") == "1"
@@ -500,7 +497,7 @@ def main():
     
     print("Trying to load client-secrets.json file ...")
     secrets_file, cache_file = get_client_secret_filenames()
-    sheets = Sheets.from_files(secrets_file, cache_file)
+    sheets = Sheets.from_files(secrets_file, cache_file, no_webserver=False)
     print("Success.")
 
     date = None if len(sys.argv) < 3 else sys.argv[2].strip()
