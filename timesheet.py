@@ -457,7 +457,7 @@ def calc_stats(api, timesheet_url, arg_date=None):
             expected = str(((index + 1 - special) * 8) - deduct_work_hours).zfill(2)
             local_h, local_m = calc(hours[index], half_day)
             actual_m += local_m
-            actual_h += local_h + (actual_m / 60)
+            actual_h += local_h + (0 if actual_m < 60 else 1)
             actual_m = actual_m % 60
             print("  %s: %s\t[%s:00 vs %s:%s] %s" % (worked_date, hours[index], expected,
                                                   str(actual_h).zfill(2), str(actual_m).zfill(2),
