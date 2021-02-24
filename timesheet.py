@@ -309,7 +309,11 @@ def export_csv(api, timesheet_url, arg_date):
 
             for task in tasks:
                 t = task.split('\n')[0] if '\n' in task else task
-                g = r.match(t).groups()
+                try:
+                    g = r.match(t).groups()
+                except Exception as ex:
+                    print("ERROR: %s - %s" % (t, str(ex)))
+                    continue
                 if DEBUG:
                     print("task:   %s" % (t))
                     print("groups: %s" % len(g))
