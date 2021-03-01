@@ -373,7 +373,7 @@ def calc_daily_hours_for_month(api, timesheet_url, arg_date):
 
     hours = str(minutes / 60).zfill(2)
     minutes = str(minutes % 60).zfill(2)
-    lunch_hours = str(int(hours) - days).zfill(2)
+    lunch_hours = str(int(float(hours)) - days).zfill(2)
     print("")
     print("Total days worked: %s" % str(days))
     print("Total hours: %s:%s (with 1 hour lunch: %s:%s)" % (hours, minutes, lunch_hours, minutes))
