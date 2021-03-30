@@ -450,20 +450,32 @@ def calc_stats(api, timesheet_url, arg_date=None):
 
     special = 0
     deduct_work_hours = 0
+    work_hours = 0
+    work_minutes = 0
+    days = 0
     for index, worked_date in enumerate(dates):
+        days += 1
         if hours[index] in SPECIAL_VALUES:
             print("  %s: Off, because %s" % (worked_date, hours[index]))
             special = special + 1
         else:
             half_day = worked_date in half_days
             # each workday has 8 hours of work, but on half days it is only half of 8, aka 4.
-            deduct_work_hours += 0 if not half_day else 4
-            expected = str(((index + 1 - special) * 8) - deduct_work_hours).zfill(2)
-            local_h, local_m = calc(hours[index], half_day)
-            actual_m += local_m
-            actual_h += local_h + (0 if actual_m < 60 else 1)
-            actual_m = actual_m % 60
-            print("  %s: %s\t[%s:00 vs %s:%s] %s" % (worked_date, hours[index], expected,
+            work_hours_for_the_day = 8 if not half_day else 4
+            expected_hours_accumulated_total = ((index + 1 - special) * 8) - (8 - work_hours_for_the_day)
+            expected_minutes_accumulated_total = expected_hours_accumulated_total * 60
+
+            # hours[index] is the actual time worked, e.g. 6:30 means 6 hours and 30 minutes
+            local_h, local_m = calc(hours[index])
+
+            work_hours += local_h
+            work_minutes += local_m
+
+            actual_h = work_hours
+            # 330 minutes = 6 hours and 30 minutes
+            actual_h += int(work_minutes / 60)
+            actual_m = work_minutes % 60
+            print("  %s: %s\t[%s:00 vs %s:%s] %s" % (worked_date, hours[index], expected_hours_accumulated_total,
                                                   str(actual_h).zfill(2), str(actual_m).zfill(2),
                                                   "Half day" if half_day else ""))
     print("")
