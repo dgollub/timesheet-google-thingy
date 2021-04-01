@@ -29,6 +29,9 @@ COL_NOTES = 9
 COL_TASKS_START = 10
 SPECIAL_VALUES = ["sick", "ab", "off", "wfh", "hol"]
 
+SATURDAY = 5
+SUNDAY = 6
+
 
 def calc(hour, half_it=False, split_char = ":"):
     parts = str(hour).split(split_char)
@@ -347,6 +350,8 @@ def calc_daily_hours_for_month(api, timesheet_url, arg_date):
         time_start = row[COL_TIME_START] if max_cols >= COL_TIME_START else None
         time_end = row[COL_TIME_END] if max_cols >= COL_TIME_END else None
         date = row[COL_DATE] if max_cols >= COL_DATE else None
+        worked_at = row[COL_MOVE] if max_cols >= COL_MOVE else None
+        notes = row[COL_NOTES] if max_cols >= COL_NOTES else ""
 
         if time_start is None or time_end is None or date is None:
             continue
@@ -354,14 +359,27 @@ def calc_daily_hours_for_month(api, timesheet_url, arg_date):
         end_hours, end_minutes = calc(time_end)
 
         if start_hours == 0:
-            print("Day off because of %s" % time_start)
+            print("%s: Day off because of %s" % (date, "whatever" if time_start == 0 else time_start))
             continue
+
+        extra_info = ""
+
+        the_date = arrow.get(str(date), 'YYYYMMDD')
+        if the_date.weekday() in [SATURDAY, SUNDAY]:
+            extra_info += " - Weekend work"
+
+        half_day = 'half' in row[COL_WORK_FROM_HOME]
+        if half_day:
+            extra_info += " - half day PTO"
+
+        if worked_at in ['o', 'O'] or "OFFICE" in notes.upper():
+            extra_info += " - Commute to office"
 
         minutes_day = abs(end_hours - start_hours) * 60
         minutes_day += end_minutes - start_minutes
         minutes += minutes_day
 
-        hours_day = minutes_day / 60
+        hours_day = int(minutes_day / 60)
         hours_day_without_lunch = hours_day - 1
         minutes_day = minutes_day % 60
         total_time_for_date = str(hours_day).zfill(2) + ':' + str(minutes_day).zfill(2)
@@ -369,7 +387,7 @@ def calc_daily_hours_for_month(api, timesheet_url, arg_date):
         days += 1
 
         no_lunch = str(hours_day_without_lunch).zfill(2) + ':' + str(minutes_day).zfill(2)
-        print("%s: %s to %s = %s (without lunch: %s)" % (date, str(time_start).zfill(2), str(time_end).zfill(2), total_time_for_date, no_lunch))
+        print("%s: %s to %s = %s (without lunch: %s)%s" % (date, str(time_start).zfill(2), str(time_end).zfill(2), total_time_for_date, no_lunch, extra_info))
 
     hours = str(minutes / 60).zfill(2)
     minutes = str(minutes % 60).zfill(2)
@@ -448,21 +466,20 @@ def calc_stats(api, timesheet_url, arg_date=None):
     print("")
     print("Valid hours entries: %s\t[required vs actual]" % len(hours))
 
-    special = 0
     deduct_work_hours = 0
     work_hours = 0
     work_minutes = 0
     days = 0
+    expected_hours_accumulated_total = 0
     for index, worked_date in enumerate(dates):
         days += 1
         if hours[index] in SPECIAL_VALUES:
             print("  %s: Off, because %s" % (worked_date, hours[index]))
-            special = special + 1
         else:
             half_day = worked_date in half_days
             # each workday has 8 hours of work, but on half days it is only half of 8, aka 4.
             work_hours_for_the_day = 8 if not half_day else 4
-            expected_hours_accumulated_total = ((index + 1 - special) * 8) - (8 - work_hours_for_the_day)
+            expected_hours_accumulated_total += 8 - (8 - work_hours_for_the_day)
             expected_minutes_accumulated_total = expected_hours_accumulated_total * 60
 
             # hours[index] is the actual time worked, e.g. 6:30 means 6 hours and 30 minutes
