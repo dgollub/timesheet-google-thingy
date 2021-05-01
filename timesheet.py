@@ -15,6 +15,7 @@ from gsheets import Sheets
 
 CURRENT_PATH = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 DEBUG = os.environ.get('DEBUG', "0") == "1"
+AS_CSV = os.environ.get('CSV', "0") == "1"
 
 COL_DATE = 0
 COL_WEEKDAY = 1
@@ -175,11 +176,36 @@ def get_timesheet_for_date(rows, date, user_full_name):
     # 2021-01-04 just make this the default for now
     wfh_info = "at all times, unless mentioned otherwise below"
 
+
+    # regex: ([a-zA-Z].+-\d+)(.*)((?<=\[).+(?=\]))
+    # text:  SCAN-4167 As a developer, I want to update AIScanRobo every week [1h]
+    # 3 groups:
+    #  SCAN-4167
+    #  As a developer, I want to update AIScanRobo every week [
+    #  1h
+    r = re.compile(r"([a-zA-Z].+-\d+)(.*)((?<=\[).+(?=\]))")
+
+    total_time_minutes_from_tasks = 0
     tasks = []
     for idx in range(COL_TASKS_START, max_cols):
         task = found_row[idx].strip()
         if task:
-            tasks.append(task)
+            t = task.split('\n')[0] if '\n' in task else task
+            try:
+                g = r.match(t).groups()
+            except Exception as ex:
+                print("ERROR: %s - %s" % (t, str(ex)))
+                continue
+            if DEBUG:
+                print("task:   %s" % (t))
+                print("groups: %s" % len(g))
+
+            [task_number, task_details, task_duration] = g
+            hours, half_hours = calc(task_duration.replace("h", ""), split_char=".")
+            minutes = (hours * 60) + (6 * half_hours)
+            total_time_minutes_from_tasks += minutes
+            other_lines = task.split('\n')[1:]
+            tasks.append("%s %s\n%s" % (task_number.strip(), task_details[:-2].strip(), '\n'.join(other_lines)))
 
     def format_tasks(tasks):
         if not tasks:
@@ -213,11 +239,25 @@ def get_timesheet_for_date(rows, date, user_full_name):
 
         return result
 
+    total_hours = str(int(total_time_minutes_from_tasks / 60)).zfill(2)
+    total_minutes = str(total_time_minutes_from_tasks % 60).zfill(2)
+    total_duration = "%s:%s" % (total_hours, total_minutes)
+
+    test_duration = duration
+    if len(test_duration) <= 4:
+        test_duration = "0%s" % duration
+    if total_duration != test_duration:
+        print("")
+        print("")
+        print("The task times do not add up! Tasks vs time entered: %s != %s" % (total_duration, test_duration))
+        print("")
+        print("")
+# Time: %(start)s - %(end)s (%(duration)s hours total [%(total_hours)s:%(total_minutes)s])
     msg = """
 [Daily Report] %(date)s
 
 WFH: %(wfh_info)s
-Time: %(start)s - %(end)s (%(duration)s hours total)
+
 
 Hi,
 
@@ -239,7 +279,11 @@ Kind regards,
     "wfh_info": wfh_info,
     "tasks": format_tasks(tasks) if tasks else "",
     "notes": format_notes(notes) if notes else "",
+    "total_hours": total_hours,
+    "total_minutes": total_minutes,
 }
+
+    print("Total time for all tasks (%s): %s - %s:%s" % (len(tasks), total_time_minutes_from_tasks, total_hours, total_minutes))
 
     return msg
 
@@ -405,8 +449,9 @@ def calc_stats(api, timesheet_url, arg_date=None):
 
     if filtered is None or not filtered:
         return None
-    print("")
-    print("Found (%d) entries for date %s!" % (len(filtered), date))
+    if not AS_CSV:
+        print("")
+        print("Found (%d) entries for date %s!" % (len(filtered), date))
 
     dates, hours = [], []
     half_days = {}
@@ -462,9 +507,10 @@ def calc_stats(api, timesheet_url, arg_date=None):
     expected = 0
     actual_h, actual_m = 0, 0
 
-    print("*" * 50)
-    print("")
-    print("Valid hours entries: %s\t[required vs actual]" % len(hours))
+    if not AS_CSV:
+        print("*" * 50)
+        print("")
+        print("Valid hours entries: %s\t[required vs actual]" % len(hours))
 
     deduct_work_hours = 0
     work_hours = 0
@@ -474,7 +520,10 @@ def calc_stats(api, timesheet_url, arg_date=None):
     for index, worked_date in enumerate(dates):
         days += 1
         if hours[index] in SPECIAL_VALUES:
-            print("  %s: Off, because %s" % (worked_date, hours[index]))
+            if not AS_CSV:
+                print("  %s: Off, because %s" % (worked_date, hours[index]))
+            else:
+                pass
         else:
             half_day = worked_date in half_days
             # each workday has 8 hours of work, but on half days it is only half of 8, aka 4.
@@ -492,16 +541,21 @@ def calc_stats(api, timesheet_url, arg_date=None):
             # 330 minutes = 6 hours and 30 minutes
             actual_h += int(work_minutes / 60)
             actual_m = work_minutes % 60
-            print("  %s: %s\t[%s:00 vs %s:%s] %s" % (worked_date, hours[index], expected_hours_accumulated_total,
-                                                  str(actual_h).zfill(2), str(actual_m).zfill(2),
-                                                  "Half day" if half_day else ""))
-    print("")
-    print("First:", "<first> not found" if first is None else first[COL_DATE])
-    print("Last:", "<last> not found" if last is None else last[COL_DATE])
-    print("")
-    print("Total time in %s: %s" % (date, total_time))
-    print("")
-    print("*" * 50)
+            if AS_CSV:
+                print("%s;%s;" % (worked_date, hours[index]))
+            else:
+                print("  %s: %s\t[%s:00 vs %s:%s] %s" % (worked_date, hours[index], expected_hours_accumulated_total,
+                                                    str(actual_h).zfill(2), str(actual_m).zfill(2),
+                                                    "Half day" if half_day else ""))
+
+    if not AS_CSV:
+        print("")
+        print("First:", "<first> not found" if first is None else first[COL_DATE])
+        print("Last:", "<last> not found" if last is None else last[COL_DATE])
+        print("")
+        print("Total time in %s: %s" % (date, total_time))
+        print("")
+        print("*" * 50)
 
 
 def main():
@@ -522,12 +576,14 @@ def main():
     print("")
     print("Available commands:")
     print("- stats: show summed up hours and minutes for the given/current month")
+    print("         use \"CSV=1 python timesheet.py stats\" to format the output")
+    print("         as CSV")
     print("- daily: same as stats, except ready to email to HR")
     print("- csv: task breakdown for the month and time spend on each task")
     print("")
     print("""Tip: use "DEBUG=1 timesheet <parameter>" to enable debug output""")
     print("")
-    
+
     print("Trying to load client-secrets.json file ...")
     secrets_file, cache_file = get_client_secret_filenames()
     sheets = Sheets.from_files(secrets_file, cache_file, no_webserver=False)
