@@ -140,9 +140,8 @@ def get_timesheet_for_date(rows, date, user_full_name):
     start = parse_hours(start_val).format("HH:mm")
     end = parse_hours(end_val).format("HH:mm")
     duration = str(duration_val)
-    notes_str = found_row[COL_NOTES]
+    notes_str = found_row[COL_NOTES] if max_cols >= COL_NOTES else ""
     notes = notes_str.split('\n')
-
 
     # check the previous Friday entry (if today is not Friday), to see what work from home
     # days were were selected
@@ -331,7 +330,7 @@ def export_csv(api, timesheet_url, arg_date):
         #  SCAN-4167
         #  As a developer, I want to update AIScanRobo every week [
         #  1h
-        r = re.compile(r"([a-zA-Z].+-\d+)(.*)((?<=\[).+(?=\]))")
+        r = re.compile(r"([a-zA-Z].*-\d+[^\s])(.*)((?<=\[).+(?=\]))")
         for row in filtered:
             max_cols = len(row)        
             time = row[COL_TIME_FIXED] if max_cols >= COL_TIME_FIXED else None
