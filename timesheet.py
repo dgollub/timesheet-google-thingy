@@ -330,7 +330,7 @@ def export_csv(api, timesheet_url, arg_date):
         #  SCAN-4167
         #  As a developer, I want to update AIScanRobo every week [
         #  1h
-        r = re.compile(r"([a-zA-Z].*-\d+[^\s])(.*)((?<=\[).+(?=\]))")
+        r = re.compile(r"([a-zA-Z].*-\d*[^\sa-zA-Z])(.*)((?<=\[).+(?=\]))")
         for row in filtered:
             max_cols = len(row)        
             time = row[COL_TIME_FIXED] if max_cols >= COL_TIME_FIXED else None
@@ -359,6 +359,7 @@ def export_csv(api, timesheet_url, arg_date):
                     g = r.match(t).groups()
                 except Exception as ex:
                     print("ERROR: %s - %s" % (t, str(ex)))
+                    print("%s: failed parsing - %s::::%s::::%s" % (date, task, t, r.match(t)))
                     continue
                 if DEBUG:
                     print("task:   %s" % (t))
