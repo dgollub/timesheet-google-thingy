@@ -324,7 +324,6 @@ def export_csv(api, timesheet_url, arg_date):
             # username|date|task|duration|work_type|details
             f.writerow(["daniel", arrow.get(str(date), 'YYYYMMDD').format('YYYY.MM.DD'), task, "%dm" % (duration_minutes), work_type, details])
 
-        # regex: ([a-zA-Z].+-\d+)(.*)((?<=\[).+(?=\]))
         # text:  SCAN-4167 As a developer, I want to update AIScanRobo every week [1h]
         # 3 groups:
         #  SCAN-4167
