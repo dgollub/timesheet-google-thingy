@@ -1,0 +1,87 @@
+username,date,task,duration,work_type,details
+daniel,2023.12.01,ADM-27,30m,Development,ADM-27 Overhead
+daniel,2023.12.01,ADM-24,60m,Meeting,ADM-24 Sprint Meeting
+daniel,2023.12.01,SRE-26,180m,Development,SRE-26 set up EKS dev cluster with eksctl
+daniel,2023.12.01,ADM-30,90m,Development,ADM-30 Fix computer problems
+daniel,2023.12.01,ASR-221,60m,Development,ASR-221 Create custom build script for DocuMatch
+daniel,2023.12.04,ADM-27,30m,Development,ADM-27 Overhead
+daniel,2023.12.04,ADM-24,120m,Development,ADM-24 WIN Session
+daniel,2023.12.04,ADM-24,30m,Development,ADM-24 Weekly Devops Discussion
+daniel,2023.12.04,ASR-221,60m,Development,ASR-221 Create custom build script for DocuMatch
+daniel,2023.12.04,SRE-100,240m,Development,SRE-100 Set up VM for Robert
+daniel,2023.12.04,SRE-110,120m,Development,SRE-110 SRE General Work
+daniel,2023.12.05,ADM-27,30m,Development,ADM-27 Overhead
+daniel,2023.12.05,ADM-24,60m,Meeting,ADM-24 CS Meeting
+daniel,2023.12.05,SRE-110,120m,Development,SRE-110 SRE General Work
+daniel,2023.12.05,SRE-101,90m,Development,SRE-101 Recreate VMWare VMs on ProxmoxVE host
+daniel,2023.12.06,ADM-27,30m,Development,ADM-27 Overhead
+daniel,2023.12.06,SRE-111,120m,Development,SRE-111 AWS CLI MFA Login issue with ECR on Jean's account
+daniel,2023.12.06,SRE-110,120m,Development,SRE-110 SRE General Work
+daniel,2023.12.06,SRE-101,180m,Development,SRE-101 Recreate VMWare VMs on ProxmoxVE host
+daniel,2023.12.06,SRE-94,120m,Development,SRE-94 Revert logic for Contract Information Display in ASR
+daniel,2023.12.06,ADM-24,60m,Development,ADM-24 AWS Discussion
+daniel,2023.12.07,ADM-27,30m,Development,ADM-27 Overhead
+daniel,2023.12.07,SRE-110,150m,Development,SRE-110 SRE General Work
+daniel,2023.12.07,SRE-101,240m,Development,SRE-101 Recreate VMWare VMs on ProxmoxVE host
+daniel,2023.12.07,SRE-94,120m,Development,SRE-94 Revert logic for Contract Information Display in ASR
+daniel,2023.12.08,ADM-27,30m,Development,ADM-27 Overhead
+daniel,2023.12.08,SRE-110,120m,Development,SRE-110 SRE General Work
+daniel,2023.12.08,SRE-101,60m,Development,SRE-101 Recreate VMWare VMs on ProxmoxVE host
+daniel,2023.12.08,ADM-22,90m,Development,ADM-22 Helpdesk
+daniel,2023.12.08,ADM-24,60m,Meeting,ADM-24 Sprint Meeting
+daniel,2023.12.11,ADM-27,30m,Development,ADM-27 Overhead
+daniel,2023.12.11,SRE-110,180m,Development,SRE-110 SRE General Work
+daniel,2023.12.11,ADM-22,90m,Development,ADM-22 Helpdesk
+daniel,2023.12.11,ADM-24,30m,Meeting,ADM-24 DI/DX Meeting
+daniel,2023.12.11,ADM-24,30m,Development,ADM-24 Weekly Devops Discussion
+daniel,2023.12.12,ADM-27,30m,Development,ADM-27 Overhead
+daniel,2023.12.12,SRE-110,120m,Development,SRE-110 SRE General Work
+daniel,2023.12.12,ADM-24,60m,Meeting,ADM-24 CS Meeting
+daniel,2023.12.12,SRE-26,270m,Development,SRE-26 set up EKS dev cluster with eksctl
+daniel,2023.12.12,ADM-22,60m,Development,ADM-22 Helpdesk
+daniel,2023.12.13,ADM-27,30m,Development,ADM-27 Overhead
+daniel,2023.12.13,SRE-110,120m,Development,SRE-110 SRE General Work
+daniel,2023.12.13,ADM-24,120m,Meeting,ADM-24 EKS Troubleshooting Meeting
+daniel,2023.12.13,SRE-26,240m,Development,SRE-26 set up EKS dev cluster with eksctl
+daniel,2023.12.14,ADM-27,30m,Development,ADM-27 Overhead
+daniel,2023.12.14,SRE-110,120m,Development,SRE-110 SRE General Work
+daniel,2023.12.14,ADM-22,90m,Development,ADM-22 Helpdesk
+daniel,2023.12.14,SRE-26,180m,Development,SRE-26 set up EKS dev cluster with eksctl
+daniel,2023.12.14,SRE-109,120m,Development,SRE-109 pve-kerntripper VMs: add to disk space check script
+daniel,2023.12.15,ADM-27,30m,Development,ADM-27 Overhead
+daniel,2023.12.15,SRE-110,240m,Development,SRE-110 SRE General Work
+daniel,2023.12.15,SRE-26,180m,Development,SRE-26 set up EKS dev cluster with eksctl
+daniel,2023.12.15,ADM-22,30m,Development,ADM-22 Helpdesk
+daniel,2023.12.15,ADM-24,60m,Meeting,ADM-24 Sprint Meeting
+daniel,2023.12.17,ADM-27,30m,Development,ADM-27 Overhead
+daniel,2023.12.17,SRE-110,240m,Development,SRE-110 SRE General Work
+daniel,2023.12.18,ADM-27,30m,Development,ADM-27 Overhead
+daniel,2023.12.18,SRE-105,240m,Development,SRE-105 Setup new primary VPN VM on pve-buildmachine
+daniel,2023.12.18,SRE-110,120m,Development,SRE-110 SRE General Work
+daniel,2023.12.18,ADM-24,30m,Meeting,ADM-24 DI/DX Meeting
+daniel,2023.12.18,ADM-24,30m,Development,ADM-24 Weekly Devops Discussion
+daniel,2023.12.19,ADM-27,30m,Development,ADM-27 Overhead
+daniel,2023.12.19,SRE-110,330m,Development,SRE-110 SRE General Work
+daniel,2023.12.19,ADM-24,60m,Meeting,ADM-24 CS Meeting
+daniel,2023.12.19,SRE-102,60m,Development,SRE-102 Add docker-clean.sh to cronjob on VMs
+daniel,2023.12.20,ADM-27,30m,Development,ADM-27 Overhead
+daniel,2023.12.20,SRE-110,420m,Development,SRE-110 SRE General Work
+daniel,2023.12.20,SRE-102,60m,Development,SRE-102 Add docker-clean.sh to cronjob on VMs
+daniel,2023.12.20,SRE-27,240m,Development,SRE-27 Set up Ingress with certificate support for EKS
+daniel,2023.12.21,ADM-27,30m,Development,ADM-27 Overhead
+daniel,2023.12.21,ASR-220,240m,Development,ASR-220 Create deployment script for Outsourcing VM
+daniel,2023.12.21,SRE-110,360m,Development,SRE-110 SRE General Work
+daniel,2023.12.21,Task SRE-103,60m,Development,Task SRE-103 Add log rotation for docker logs on dev VMs
+daniel,2023.12.21,ADM-22,60m,Development,ADM-22 Helpdesk
+daniel,2023.12.22,ADM-27,60m,Development,ADM-27 Overhead
+daniel,2023.12.22,ASR-220,120m,Development,ASR-220 Create deployment script for Outsourcing VM
+daniel,2023.12.22,SRE-27,120m,Development,SRE-27 Set up Ingress with certificate support for EKS
+daniel,2023.12.22,Task SRE-103,60m,Development,Task SRE-103 Add log rotation for docker logs on dev VMs
+daniel,2023.12.25,ADM-27,30m,Development,ADM-27 Overhead
+daniel,2023.12.25,SRE-110,240m,Development,SRE-110 SRE General Work
+daniel,2023.12.25,SRE-27,240m,Development,SRE-27 Set up Ingress with certificate support for EKS
+daniel,2023.12.25,Task SRE-103,60m,Development,Task SRE-103 Add log rotation for docker logs on dev VMs
+daniel,2023.12.25,ADM-24,30m,Meeting,ADM-24 DI/DX Meeting
+daniel,2023.12.26,ADM-27,30m,Development,ADM-27 Overhead
+daniel,2023.12.26,ADM-28,150m,Development,ADM-28 Time Tracking and Reporting
+daniel,2023.12.26,SRE-110,120m,Development,SRE-110 SRE General Work
